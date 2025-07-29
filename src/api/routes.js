@@ -1,11 +1,9 @@
 const express = require("express");
 const { Parser } = require("json2csv");
+const { API_URL, USER, PASSWORD } = require("../utils/constants");
 const Client = require("./client");
 const axios = require("axios");
 const {
-  API_URL,
-  USER,
-  PASSWORD,
   AXUM_URL_BASE,
 } = require("../utils/constants");
 const {
