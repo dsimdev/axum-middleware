@@ -9,6 +9,12 @@ const apiRoutes = require('./api/routes');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Asegura que la carpeta logs exista
+const logsDir = path.join(__dirname, '..', 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
+}
+
 // Función para obtener la fecha en GMT-3
 function getGMT3Date() {
     const date = new Date();
