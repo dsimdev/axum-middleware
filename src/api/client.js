@@ -2,10 +2,14 @@ const axios = require('axios');
 
 class Client {
     constructor(apiUrl, user, password) {
+        if (!apiUrl) {
+            throw new Error('API_URL no está definido. Verifica tus variables de entorno.');
+        }
         this.apiUrl = apiUrl;
         this.user = user;
         this.password = password;
         this.token = '';
+        console.log("API_URL usado por Client:", this.apiUrl);
     }
 
     async login() {

@@ -23,7 +23,9 @@ const client = new Client(API_URL, USER, PASSWORD);
 function requireQueryParams(params, req, res) {
   for (const param of params) {
     if (req.query[param] === undefined) {
-      res.status(400).json({ error: `Falta el parámetro obligatorio: ${param}` });
+      res
+        .status(400)
+        .json({ error: `Falta el parámetro obligatorio: ${param}` });
       return false;
     }
   }
@@ -36,8 +38,16 @@ router.get("/clientes", async (req, res, next) => {
   if (!requireQueryParams(required, req, res)) return;
   try {
     const { pagina, registrosPorPagina, distribuidor, sucursal } = req.query;
-    const rutasVentas = await client.fetchRutasVentasData({ distribuidor, sucursal });
-    const response = await client.fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal });
+    const rutasVentas = await client.fetchRutasVentasData({
+      distribuidor,
+      sucursal,
+    });
+    const response = await client.fetchClientData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+      sucursal,
+    });
     const resultado = Array.isArray(response.resultado)
       ? response.resultado.filter((c) => !c.anulado)
       : [];
@@ -56,12 +66,25 @@ router.get("/percepciones-csv", async (req, res, next) => {
   if (!requireQueryParams(required, req, res)) return;
   try {
     const { pagina, registrosPorPagina, distribuidor, sucursal } = req.query;
-    const response = await client.fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal });
+    const response = await client.fetchClientData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+      sucursal,
+    });
     const clientesArray = Array.isArray(response.resultado)
-      ? response.resultado.filter(c => c.aplicaIngresosBrutos)
+      ? response.resultado.filter((c) => c.aplicaIngresosBrutos)
       : [];
-    const padron = await client.fetchPadroniibbData({ pagina, registrosPorPagina, distribuidor });
-    const percepcioniibb = await client.fetchPercepcioniibbData({ pagina, registrosPorPagina, distribuidor });
+    const padron = await client.fetchPadroniibbData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+    });
+    const percepcioniibb = await client.fetchPercepcioniibbData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+    });
 
     const percepcion = findPercepcionIIBB(percepcioniibb);
     const formulas = percepcion.percepcionBrutoFormula || [];
@@ -72,11 +95,24 @@ router.get("/percepciones-csv", async (req, res, next) => {
         (c) => c.codigoCliente === padronCliente.codigoCliente
       );
       const tasa = getTasa(padronCliente, cliente, formulas);
-      return mapPadronToPercepcionCsv(padronCliente, cliente, minimoImponible, tasa);
+      return mapPadronToPercepcionCsv(
+        padronCliente,
+        cliente,
+        minimoImponible,
+        tasa
+      );
     });
 
     const parser = new Parser({
-      fields: ["codigo", "minib", "percepib", "des", "codigoArticulo", "linea", "rubro"],
+      fields: [
+        "codigo",
+        "minib",
+        "percepib",
+        "des",
+        "codigoArticulo",
+        "linea",
+        "rubro",
+      ],
     });
     const csv = parser.parse(csvRows);
 
@@ -94,12 +130,25 @@ router.get("/percepciones", async (req, res, next) => {
   if (!requireQueryParams(required, req, res)) return;
   try {
     const { pagina, registrosPorPagina, distribuidor, sucursal } = req.query;
-    const response = await client.fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal });
+    const response = await client.fetchClientData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+      sucursal,
+    });
     const clientesArray = Array.isArray(response.resultado)
-      ? response.resultado.filter(c => c.aplicaIngresosBrutos)
+      ? response.resultado.filter((c) => c.aplicaIngresosBrutos)
       : [];
-    const padron = await client.fetchPadroniibbData({ pagina, registrosPorPagina, distribuidor });
-    const percepcioniibb = await client.fetchPercepcioniibbData({ pagina, registrosPorPagina, distribuidor });
+    const padron = await client.fetchPadroniibbData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+    });
+    const percepcioniibb = await client.fetchPercepcioniibbData({
+      pagina,
+      registrosPorPagina,
+      distribuidor,
+    });
 
     const percepcion = findPercepcionIIBB(percepcioniibb);
     const formulas = percepcion.percepcionBrutoFormula || [];
@@ -110,7 +159,12 @@ router.get("/percepciones", async (req, res, next) => {
         (c) => c.codigoCliente === padronCliente.codigoCliente
       );
       const tasa = getTasa(padronCliente, cliente, formulas);
-      return mapPadronToPercepcionJson(padronCliente, cliente, minimoImponible, tasa);
+      return mapPadronToPercepcionJson(
+        padronCliente,
+        cliente,
+        minimoImponible,
+        tasa
+      );
     });
 
     res.json(jsonRows);
@@ -123,7 +177,10 @@ router.get("/percepciones", async (req, res, next) => {
 router.post("/clientes", async (req, res, next) => {
   try {
     const { urlBase, base, headers } = getAxumConfig(req, AXUM_URL_BASE);
-    if (!base) return res.status(400).json({ error: "Falta el parámetro obligatorio: base" });
+    if (!base)
+      return res
+        .status(400)
+        .json({ error: "Falta el parámetro obligatorio: base" });
     const clientes = req.body;
     const url = `${urlBase}/${base}/api/v1/Clientes`; // <-- Agrega /api/v1/
     const response = await axios.post(url, clientes, { headers });
@@ -140,7 +197,10 @@ router.post("/clientes", async (req, res, next) => {
 router.post("/percepciones", async (req, res, next) => {
   try {
     const { urlBase, base, headers } = getAxumConfig(req, AXUM_URL_BASE);
-    if (!base) return res.status(400).json({ error: "Falta el parámetro obligatorio: base" });
+    if (!base)
+      return res
+        .status(400)
+        .json({ error: "Falta el parámetro obligatorio: base" });
     const percepciones = req.body;
     const url = `${urlBase}/${base}/api/v1/Percepciones`; // <-- Agrega /api/v1/
     const response = await axios.post(url, percepciones, { headers });

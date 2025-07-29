@@ -39,13 +39,15 @@ app.use(morgan(customFormat, { stream: accessLogStream })); // archivo
 
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-app.use('/api/v1', apiRoutes);
+app.use(apiRoutes);
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
+
+app.get('/health', (req, res) => res.send('OK'));
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
