@@ -33,7 +33,7 @@ app.use(morgan(customFormat, { stream: accessLogStream })); // archivo
 
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
-app.use('/api', apiRoutes);
+app.use('/api/v1', apiRoutes);
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
