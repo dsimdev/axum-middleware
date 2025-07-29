@@ -6,29 +6,38 @@ const {
   API_URL,
   USER,
   PASSWORD,
-  PAGE,
-  RECORDS_PER_PAGE,
-  AXUM_API_KEY,
-  AXUM_URL_BASE
+  AXUM_URL_BASE,
 } = require("../utils/constants");
 const {
   findPercepcionIIBB,
   getTasa,
   mapClienteToCustomFormat,
   mapPadronToPercepcionJson,
-  mapPadronToPercepcionCsv
-} = require("../utils/functions");
+  mapPadronToPercepcionCsv,
+  getAxumConfig,
+} = require("../utils/helpers");
 
 const router = express.Router();
-
 const client = new Client(API_URL, USER, PASSWORD);
 
+function requireQueryParams(params, req, res) {
+  for (const param of params) {
+    if (req.query[param] === undefined) {
+      res.status(400).json({ error: `Falta el parámetro obligatorio: ${param}` });
+      return false;
+    }
+  }
+  return true;
+}
 
-
+// GET clientes
 router.get("/clientes", async (req, res, next) => {
+  const required = ["distribuidor", "sucursal"];
+  if (!requireQueryParams(required, req, res)) return;
   try {
-    const rutasVentas = await client.fetchRutasVentasData();
-    const response = await client.fetchClientData(PAGE, RECORDS_PER_PAGE);
+    const { pagina, registrosPorPagina, distribuidor, sucursal } = req.query;
+    const rutasVentas = await client.fetchRutasVentasData({ distribuidor, sucursal });
+    const response = await client.fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal });
     const resultado = Array.isArray(response.resultado)
       ? response.resultado.filter((c) => !c.anulado)
       : [];
@@ -41,14 +50,18 @@ router.get("/clientes", async (req, res, next) => {
   }
 });
 
+// GET percepciones-csv
 router.get("/percepciones-csv", async (req, res, next) => {
+  const required = ["distribuidor", "sucursal"];
+  if (!requireQueryParams(required, req, res)) return;
   try {
-    const response = await client.fetchClientData();
+    const { pagina, registrosPorPagina, distribuidor, sucursal } = req.query;
+    const response = await client.fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal });
     const clientesArray = Array.isArray(response.resultado)
       ? response.resultado.filter(c => c.aplicaIngresosBrutos)
       : [];
-    const padron = await client.fetchPadroniibbData();
-    const percepcioniibb = await client.fetchPercepcioniibbData();
+    const padron = await client.fetchPadroniibbData({ pagina, registrosPorPagina, distribuidor });
+    const percepcioniibb = await client.fetchPercepcioniibbData({ pagina, registrosPorPagina, distribuidor });
 
     const percepcion = findPercepcionIIBB(percepcioniibb);
     const formulas = percepcion.percepcionBrutoFormula || [];
@@ -63,7 +76,7 @@ router.get("/percepciones-csv", async (req, res, next) => {
     });
 
     const parser = new Parser({
-      fields: ["codigo", "minib", "percepib", "des"],
+      fields: ["codigo", "minib", "percepib", "des", "codigoArticulo", "linea", "rubro"],
     });
     const csv = parser.parse(csvRows);
 
@@ -75,14 +88,18 @@ router.get("/percepciones-csv", async (req, res, next) => {
   }
 });
 
+// GET percepciones
 router.get("/percepciones", async (req, res, next) => {
+  const required = ["distribuidor", "sucursal"];
+  if (!requireQueryParams(required, req, res)) return;
   try {
-    const response = await client.fetchClientData();
+    const { pagina, registrosPorPagina, distribuidor, sucursal } = req.query;
+    const response = await client.fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal });
     const clientesArray = Array.isArray(response.resultado)
       ? response.resultado.filter(c => c.aplicaIngresosBrutos)
       : [];
-    const padron = await client.fetchPadroniibbData();
-    const percepcioniibb = await client.fetchPercepcioniibbData();
+    const padron = await client.fetchPadroniibbData({ pagina, registrosPorPagina, distribuidor });
+    const percepcioniibb = await client.fetchPercepcioniibbData({ pagina, registrosPorPagina, distribuidor });
 
     const percepcion = findPercepcionIIBB(percepcioniibb);
     const formulas = percepcion.percepcionBrutoFormula || [];
@@ -102,16 +119,14 @@ router.get("/percepciones", async (req, res, next) => {
   }
 });
 
+// POST clientes
 router.post("/clientes", async (req, res, next) => {
   try {
-    const clientes = req.body; // Espera un array de clientes en el body
-    const url = `${AXUM_URL_BASE}/Clientes`;
-    const response = await axios.post(url, clientes, {
-      headers: {
-        "X-Api-Key": AXUM_API_KEY,
-        "Content-Type": "application/json",
-      },
-    });
+    const { urlBase, base, headers } = getAxumConfig(req, AXUM_URL_BASE);
+    if (!base) return res.status(400).json({ error: "Falta el parámetro obligatorio: base" });
+    const clientes = req.body;
+    const url = `${urlBase}/${base}/api/v1/Clientes`; // <-- Agrega /api/v1/
+    const response = await axios.post(url, clientes, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({
@@ -121,16 +136,14 @@ router.post("/clientes", async (req, res, next) => {
   }
 });
 
+// POST percepciones
 router.post("/percepciones", async (req, res, next) => {
   try {
-    const percepciones = req.body; // Espera un array de percepciones en el body
-    const url = `${AXUM_URL_BASE}/Percepciones`;
-    const response = await axios.post(url, percepciones, {
-      headers: {
-        "X-Api-Key": AXUM_API_KEY,
-        "Content-Type": "application/json",
-      },
-    });
+    const { urlBase, base, headers } = getAxumConfig(req, AXUM_URL_BASE);
+    if (!base) return res.status(400).json({ error: "Falta el parámetro obligatorio: base" });
+    const percepciones = req.body;
+    const url = `${urlBase}/${base}/api/v1/Percepciones`; // <-- Agrega /api/v1/
+    const response = await axios.post(url, percepciones, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({

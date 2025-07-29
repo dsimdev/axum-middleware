@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { DISTRIBUTOR, BRANCH, RECORDS_PER_PAGE, PAGE } = require('../utils/constants');
 
 class Client {
     constructor(apiUrl, user, password) {
@@ -21,36 +20,61 @@ class Client {
         if (!this.token) throw new Error('Token no recibido');
     }
 
-    async fetchClientData(pagina = PAGE, registrosPorPagina = RECORDS_PER_PAGE) {
+    async fetchClientData({ pagina, registrosPorPagina, distribuidor, sucursal }) {
         if (!this.token) await this.login();
-        const url = `${this.apiUrl}/Ventas/obtenerCliente?distribuidor=${DISTRIBUTOR}&sucursal=${BRANCH}&pagina=${PAGE}&registrosPorPagina=${RECORDS_PER_PAGE}`;
+        if (distribuidor === undefined) {
+            throw new Error('Falta el parámetro obligatorio: distribuidor');
+        }
+        let url = `${this.apiUrl}/Ventas/obtenerCliente?distribuidor=${distribuidor}`;
+        if (sucursal !== undefined) url += `&sucursal=${sucursal}`;
+        if (pagina !== undefined) url += `&pagina=${pagina}`;
+        if (registrosPorPagina !== undefined) url += `&registrosPorPagina=${registrosPorPagina}`;
+
         const response = await axios.get(url, {
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
         return response.data;
     }
 
-    async fetchPadroniibbData() {
+    async fetchPadroniibbData({ pagina, registrosPorPagina, distribuidor, sucursal }) {
         if (!this.token) await this.login();
-        const url = `${this.apiUrl}/Ventas/obtenerPadronIIBB?distribuidor=${DISTRIBUTOR}`;
+        if (distribuidor === undefined) {
+            throw new Error('Falta el parámetro obligatorio: distribuidor');
+        }
+        let url = `${this.apiUrl}/Ventas/obtenerPadronIIBB?distribuidor=${distribuidor}`;
+        if (sucursal !== undefined) url += `&sucursal=${sucursal}`;
+        if (pagina !== undefined) url += `&pagina=${pagina}`;
+        if (registrosPorPagina !== undefined) url += `&registrosPorPagina=${registrosPorPagina}`;
         const response = await axios.get(url, {
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
         return response.data;
     }
 
-    async fetchPercepcioniibbData() {
+    async fetchPercepcioniibbData({ pagina, registrosPorPagina, distribuidor, sucursal }) {
         if (!this.token) await this.login();
-        const url = `${this.apiUrl}/Ventas/obtenerPercepcionIIBB?distribuidor=${DISTRIBUTOR}`;
+        if (distribuidor === undefined) {
+            throw new Error('Falta el parámetro obligatorio: distribuidor');
+        }
+        let url = `${this.apiUrl}/Ventas/obtenerPercepcionIIBB?distribuidor=${distribuidor}`;
+        if (sucursal !== undefined) url += `&sucursal=${sucursal}`;
+        if (pagina !== undefined) url += `&pagina=${pagina}`;
+        if (registrosPorPagina !== undefined) url += `&registrosPorPagina=${registrosPorPagina}`;
         const response = await axios.get(url, {
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
         return response.data;
     }
 
-    async fetchRutasVentasData() {
+    async fetchRutasVentasData({ distribuidor, sucursal }) {
         if (!this.token) await this.login();
-        const url = `${this.apiUrl}/Ventas/obtenerRutasVentas?distribuidor=${DISTRIBUTOR}&sucursal=${BRANCH}&modoAtencion=PRE`;
+        if (
+            distribuidor === undefined ||
+            sucursal === undefined
+        ) {
+            throw new Error('Faltan parámetros obligatorios en fetchRutasVentasData');
+        }
+        const url = `${this.apiUrl}/Ventas/obtenerRutasVentas?distribuidor=${distribuidor}&sucursal=${sucursal}&modoAtencion=PRE`;
         const response = await axios.get(url, {
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
