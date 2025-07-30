@@ -1,7 +1,5 @@
 require('dotenv').config();
 
-console.log("API_URL desde constants.js:", process.env.API_URL); // Debug
-
 module.exports = {
   API_URL: process.env.API_URL,
   USER: process.env.USER,

@@ -9,7 +9,6 @@ class Client {
         this.user = user;
         this.password = password;
         this.token = '';
-        console.log("API_URL usado por Client:", this.apiUrl);
     }
 
     async login() {

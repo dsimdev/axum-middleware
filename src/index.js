@@ -1,3 +1,6 @@
+const axios = require('axios');
+axios.get('https://api.ipify.org?format=json').then(res => console.log("IP pública Railway:", res.data));
+
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
