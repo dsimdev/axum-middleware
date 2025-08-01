@@ -1,6 +1,3 @@
-const axios = require('axios');
-axios.get('https://api.ipify.org?format=json').then(res => console.log("IP pública Railway:", res.data));
-
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -50,7 +47,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
-app.get('/health', (req, res) => res.send('OK'));
+app.get('/api/v1/status', (req, res) => res.send('OK'));
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
