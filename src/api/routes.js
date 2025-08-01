@@ -200,7 +200,7 @@ router.post("/percepciones", async (req, res, next) => {
         .status(400)
         .json({ error: "Falta el parámetro obligatorio: base" });
     const percepciones = req.body;
-    const url = `${urlBase}/${base}/Percepciones`;
+    const url = `${urlBase}/${base}/api/v1/percepciones`;
     const response = await axios.post(url, percepciones, { headers });
     res.status(response.status).json(response.data);
   } catch (error) {
