@@ -47,7 +47,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
-app.get('/api/v1/status', (req, res) => res.send('OK'));
+app.get('/api/v1/status', (req, res) => res.send('API is alive'));
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
